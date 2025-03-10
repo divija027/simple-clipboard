@@ -23,11 +23,6 @@
             gap: 15px;
             margin-bottom: 30px;
         }
-        .program-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
         .program-button {
             background-color: #3498db;
             color: white;
@@ -38,7 +33,7 @@
             font-size: 16px;
             transition: background-color 0.3s, transform 0.2s;
             text-align: left;
-            flex-grow: 1;
+            height: 100%;
         }
         .program-button:hover {
             background-color: #2980b9;
@@ -46,6 +41,12 @@
         }
         .program-button:active {
             transform: translateY(1px);
+        }
+        .program-button.selected {
+            background-color: #2ecc71;
+        }
+        .program-button.selected:hover {
+            background-color: #27ae60;
         }
         .copy-status {
             text-align: center;
@@ -94,46 +95,19 @@
     <h1>PSO LAB (Python) Code Copier</h1>
     
     <div class="instructions">
-        <p><strong>Instructions:</strong> Check two programs and click "Copy Selected Programs" to copy both codes to clipboard (one below the other with a separator). Or click a single program name to copy just that code.</p>
+        <p><strong>Instructions:</strong> Click program names to select/deselect (up to 2). Click "Copy Selected Programs" to copy both codes (one below the other with a separator). Single-click a selected program to copy just that code.</p>
     </div>
     
     <div class="program-list">
-        <div class="program-item">
-            <input type="checkbox" class="program-checkbox" data-index="0">
-            <button class="program-button" onclick="copySingleCode(0)">238. Product of Array Except Self</button>
-        </div>
-        <div class="program-item">
-            <input type="checkbox" class="program-checkbox" data-index="1">
-            <button class="program-button" onclick="copySingleCode(1)">253. Meeting Rooms II (premium)</button>
-        </div>
-        <div class="program-item">
-            <input type="checkbox" class="program-checkbox" data-index="2">
-            <button class="program-button" onclick="copySingleCode(2)">974. Subarray Sums Divisible by K</button>
-        </div>
-        <div class="program-item">
-            <input type="checkbox" class="program-checkbox" data-index="3">
-            <button class="program-button" onclick="copySingleCode(3)">15. 3Sum</button>
-        </div>
-        <div class="program-item">
-            <input type="checkbox" class="program-checkbox" data-index="4">
-            <button class="program-button" onclick="copySingleCode(4)">167. Two Sum II - Input Array Is Sorted</button>
-        </div>
-        <div class="program-item">
-            <input type="checkbox" class="program-checkbox" data-index="5">
-            <button class="program-button" onclick="copySingleCode(5)">11. Container With Most Water</button>
-        </div>
-        <div class="program-item">
-            <input type="checkbox" class="program-checkbox" data-index="6">
-            <button class="program-button" onclick="copySingleCode(6)">424. Longest Repeating Character Replacement</button>
-        </div>
-        <div class="program-item">
-            <input type="checkbox" class="program-checkbox" data-index="7">
-            <button class="program-button" onclick="copySingleCode(7)">76. Minimum Window Substring (HARD)</button>
-        </div>
-        <div class="program-item">
-            <input type="checkbox" class="program-checkbox" data-index="8">
-            <button class="program-button" onclick="copySingleCode(8)">209. Minimum Size Subarray Sum</button>
-        </div>
+        <button class="program-button" data-index="0" onclick="toggleSelection(0)">238. Product of Array Except Self</button>
+        <button class="program-button" data-index="1" onclick="toggleSelection(1)">253. Meeting Rooms II (premium)</button>
+        <button class="program-button" data-index="2" onclick="toggleSelection(2)">974. Subarray Sums Divisible by K</button>
+        <button class="program-button" data-index="3" onclick="toggleSelection(3)">15. 3Sum</button>
+        <button class="program-button" data-index="4" onclick="toggleSelection(4)">167. Two Sum II - Input Array Is Sorted</button>
+        <button class="program-button" data-index="5" onclick="toggleSelection(5)">11. Container With Most Water</button>
+        <button class="program-button" data-index="6" onclick="toggleSelection(6)">424. Longest Repeating Character Replacement</button>
+        <button class="program-button" data-index="7" onclick="toggleSelection(7)">76. Minimum Window Substring (HARD)</button>
+        <button class="program-button" data-index="8" onclick="toggleSelection(8)">209. Minimum Size Subarray Sum</button>
     </div>
     
     <button class="copy-selected-btn" onclick="copySelectedCodes()">Copy Selected Programs</button>
@@ -325,23 +299,43 @@ res=minSubArrayLen(target,nums)
 print(res)`
         ];
 
-        // Function to copy single code
-        function copySingleCode(index) {
-            const code = codeSnippets[index];
-            copyToClipboard(code, `Program ${index + 1} copied successfully!`);
+        // Array to track selected program indices
+        let selectedIndices = [];
+
+        // Function to toggle selection
+        function toggleSelection(index) {
+            const button = document.querySelector(`.program-button[data-index="${index}"]`);
+            
+            if (selectedIndices.includes(index)) {
+                // If already selected, copy single code and deselect
+                selectedIndices = selectedIndices.filter(i => i !== index);
+                button.classList.remove('selected');
+                copyToClipboard(codeSnippets[index], `Program ${index + 1} copied successfully!`);
+            } else if (selectedIndices.length < 2) {
+                // If less than 2 selected, add to selection
+                selectedIndices.push(index);
+                button.classList.add('selected');
+            } else {
+                // If 2 already selected, show warning
+                showStatus('Only 2 programs can be selected at a time!', '#e74c3c');
+            }
         }
 
         // Function to copy selected codes
         function copySelectedCodes() {
-            const checkboxes = document.querySelectorAll('.program-checkbox:checked');
-            if (checkboxes.length !== 2) {
+            if (selectedIndices.length !== 2) {
                 showStatus('Please select exactly 2 programs!', '#e74c3c');
                 return;
             }
 
-            const selectedIndices = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index));
             const combinedCode = codeSnippets[selectedIndices[0]] + '\n\n# --- PROGRAM SEPARATOR ---\n\n' + codeSnippets[selectedIndices[1]];
             copyToClipboard(combinedCode, 'Two programs copied successfully!');
+            
+            // Deselect all after copying
+            selectedIndices.forEach(index => {
+                document.querySelector(`.program-button[data-index="${index}"]`).classList.remove('selected');
+            });
+            selectedIndices = [];
         }
 
         // Helper function to copy to clipboard and show status
